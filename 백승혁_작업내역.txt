@@ -1,0 +1,15 @@
+웹서버 이미지 제작 -> Proxy_pass로 3-Tier 구조 생성 -> X-Forwarded 설정
+WAS 이미지 제작 -> Django, Gunicorn
+RDB Aurora 제작 -> 피라미터 그룹 CharacterSet UTF-8 설정으로 한글 깨짐 수정 및 Django와 연동 -> Django DB_Router코드 기가막히게 씀
+Redis Session 서버 구성 -> 데이터 캐시 및 로그인 세션 공유로 오토 스케일 환경에서 서버 다운시에도 세션 데이터 유지
+Secret Manager로 DB 계정 정보 관리 -> Password, Username을 소스 코드에 노출하지 않고 API를 이용하여 데이터를 불러와서 사용
+CI/CD 구성 -> AWS CodeDeploy, Github Action을 사용하여 CI/CD 구성 -> 현재 위치배포 전략 사용 -> Auto Scaling 그룹을 미니멈 2 Desire 3 최대 4로 설정하여 타겟 그룹 인스턴스 수가 줄어 트래픽증가로 서버 부하도가 증가할 시 자동으로 스케일아웃하여 트래픽 관리이슈 해소
+
+CloudFront, Route53, VPC,Subnet,Route Table, NAT Gateway, Internet Gateway, 보안 그룹, IAM 역할, S3 Gateway Endpoint, S3 Versioning, S3 수명관리정책, S3 엑세스 포인트, IAM 그룹 및 계정, 권한 경계, CloudWatch 로그 관리, 지표 필터 알림 설정 SNS 연동, CloudTrail 설정, 
+
+* AWS KMS 활용
+* Evnet Bridge
+* CloudWatch CloudWatchLogs VS Prometheus Grafana ELK Stack
+* Parameter Store
+* CloudFront + ALB 보안 설정 -> 완료
+* APM(Application Performance Monitoring) 도구 물색
