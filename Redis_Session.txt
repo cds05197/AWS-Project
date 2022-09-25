@@ -1,0 +1,6 @@
+pip install django-cacheops
+pip install django-redis-sessions
+
+깔고나서 코드 수정
+MiddleWare부분
+그리고 밑에 부분

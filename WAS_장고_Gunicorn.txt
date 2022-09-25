@@ -1,0 +1,48 @@
+유니콘 경로 : /usr/local/bin/gunicorn
+프로젝트 경로 : /my-django/config
+환경파일 경로 : /my-django/config.env
+
+
+https://aws.amazon.com/ko/premiumsupport/knowledge-center/ec2-linux-python3-boto3/
+-> 이거부터 해보자
+
+ftp 깔고
+
+python3 -m venv myhome -> 가상환경 생성
+
+pip gunicorn 깔고
+
+장고 설치하고 기본적인 거 하면 돼!!
+
+[user script]
+cd /my-django/
+gunicorn --bind 0:80 config.wsgi:application
+
+
+[Unit]
+Description=gunicorn Daemon
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/my-django
+ExecStart=/my-django/myhome/bin/gunicorn --bind 0:80 config.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+
+
+WEB_WAS 참고 페이지
+https://leffept.tistory.com/283?category=950490
+
+***
+vi /etc/nginx/conf.d/default.conf 
+WEB 인스턴스 SSH 접속해서 해당 파일에서
+server name == WEB EC2 DNS
+proxy_pass =- WAS EC2(Private) DNS // EX) http://ip-172-31-11-7.ap-northeast-2.compute.internal
+
+
+
+
+
