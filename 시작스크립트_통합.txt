@@ -1,0 +1,38 @@
+###################################################################################
+
+{Internal-lb}
+
+### WEB ###
+#!/bin/bash
+sudo sed -i "/proxy_pass/d" /etc/nginx/conf.d/default.conf
+sudo sed -i "7 i\ \t\tproxy_pass http:\/\/{Internel-lb};" /etc/nginx/conf.d/default.conf
+sudo systemctl restart nginx
+
+{Write_Endpoint}
+{Read_Endpoint}
+{USER}
+{PASSWORD}
+{REDIS_HOST} #Redis 엔드포인트 뒤에 :6379 포트번호는 제외하고 입력 -> 입력시 에러
+
+### WAS ###
+#!/bin/bash
+sudo sed -i "s/is_Production = .*/is_Production = False/" /my-django/config/settings.py
+sudo sed -i "s/DataBase_Name = .*/DataBase_Name = \"django_db\"/" /my-django/config/settings.py
+sudo sed -i "s/DataBase_Write_Endpoint = .*/DataBase_Write_Endpoint = \"{Write_Endpoint}\"/" /my-django/config/settings.py
+sudo sed -i "s/DataBase_Read_Endpoint = .*/DataBase_Read_Endpoint = \"{Read_Endpoint}\"/" /my-django/config/settings.py
+sudo sed -i "s/USE_CACHE = .*/USE_CACHE = True/" /my-django/config/settings.py
+sudo sed -i "s/IS_HOME = .*/IS_HOME = False/" /my-django/config/settings.py
+sudo sed -i "s/ REDIS_HOST = .*/ REDIS_HOST = \"{REDIS_HOST}\"/" /my-django/config/settings.py
+sudo systemctl restart kgcha
+
+## Bastion 에서 Redis 접속 방법 ##
+$ wget http://download.redis.io/redis-stable.tar.gz && tar xvzf redis-stable.tar.gz && cd redis-stable && make
+$ sudo cp src/redis-cli /usr/bin
+$ redis-cli -h [기본 엔드포인트]
+
+# 배포 자동화 스크립트 cp 팁
+\cp -fr config MTV common templates
+
+
+
+
