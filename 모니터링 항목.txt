@@ -1,0 +1,27 @@
+Cloud Watch
+EC2 : CPU, Web error Count
+ALB : Request, latency, Error Code
+RDS : Free Harddisk, Memory IOPS
+Eleastic Cache : Memory Free, Memory IOPS, Cache Hit
+Cloud front : Request, Latency, Error Code
+
+Node Exporter
+OS Level Metric
+EC2: Memory
+WAS: Memory
+
+* 로그 관리
+AWS
+CloudWatch Agent -> EC2 Web access, error logs
+RDS -> Error Log
+CloudTrail -> 로그인 실패 정도?
+
+https://grafana.com/grafana/dashboards/6126-node-dashboard/ -> 
+Grafana Node Exporter Dashboard 링크
+grafana-cli plugins install grafana-piechart-panel -> 이거 깔아야 대시보드 잘나와
+
+https://bokee.tistory.com/2 -> 서비스 디스커버리 1
+https://medium.com/myrealtrip-product/prometheus%EB%A5%BC-%ED%86%B5%ED%95%9C-%EC%84%9C%EB%B2%84-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81-deab448b769d -> 서비스 디스커버리 2
+
+WAS에도 node exporter 깔아야 함
+

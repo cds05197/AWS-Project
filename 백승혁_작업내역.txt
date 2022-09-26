@@ -8,8 +8,11 @@ CI/CD 구성 -> AWS CodeDeploy, Github Action을 사용하여 CI/CD 구성 -> �
 CloudFront, Route53, VPC,Subnet,Route Table, NAT Gateway, Internet Gateway, 보안 그룹, IAM 역할, S3 Gateway Endpoint, S3 Versioning, S3 수명관리정책, S3 엑세스 포인트, IAM 그룹 및 계정, 권한 경계, CloudWatch 로그 관리, 지표 필터 알림 설정 SNS 연동, CloudTrail 설정, 
 
 * AWS KMS 활용
-* Evnet Bridge
+
 * CloudWatch CloudWatchLogs VS Prometheus Grafana ELK Stack
-* Parameter Store
+-> CloudWatchLogs + agent 설치 완료
+-> Prometheus + Grafana 설치 및 Cloudwatch 연동 완료
+-> Prometheus + NodeExporter 구성 완료
+-> Service Discovery 구현 필요
+
 * CloudFront + ALB 보안 설정 -> 완료
-* APM(Application Performance Monitoring) 도구 물색
