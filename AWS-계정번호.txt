@@ -1,0 +1,6 @@
+456468200649
+
+{ ($.userIdentity.type = "IAMUser") && ($.errorCode = "AccessDenied") }
+
+
+$.userIdentity.userName

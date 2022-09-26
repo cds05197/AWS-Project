@@ -1,0 +1,69 @@
+Cloud Watch
+EC2 : CPU, Web error Count
+ALB : Request, latency, Error Code
+RDS : Free Harddisk, Memory IOPS
+Eleastic Cache : Memory Free, Memory IOPS, Cache Hit
+Cloud front : Request, Latency, Error Code
+
+Node Exporter
+OS Level Metric
+EC2: Memory
+WAS: Memory
+
+* 로그 관리
+AWS
+CloudWatch Agent -> EC2 Web access, error logs
+RDS -> Error Log
+CloudTrail -> 로그인 실패 정도?
+
+https://grafana.com/grafana/dashboards/6126-node-dashboard/ -> 
+Grafana Node Exporter Dashboard 링크
+grafana-cli plugins install grafana-piechart-panel -> 이거 깔아야 대시보드 잘나와
+
+https://bokee.tistory.com/2 -> 서비스 디스커버리 1
+https://medium.com/myrealtrip-product/prometheus%EB%A5%BC-%ED%86%B5%ED%95%9C-%EC%84%9C%EB%B2%84-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81-deab448b769d -> 서비스 디스커버리 2
+
+WAS에도 node exporter 깔아야 함
+아래 내용이 서비스 디스커버리 야믈
+------------------------------------------------------------------------------------------------------
+# my global config
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+  - job_name: 'node'
+    ec2_sd_configs:
+      - region: ap-northeast-2
+        port: 9100
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_private_ip]
+        regex: '(.*)'
+        replacement: '${1}:9100'
+        action: replace
+        target_label: __address__
+      - source_labels: [__meta_ec2_tag_group]
+        target_label: group
+      - source_labels: [__meta_ec2_instance_type]
+        target_label: instance_type

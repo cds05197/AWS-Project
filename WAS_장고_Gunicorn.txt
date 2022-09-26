@@ -8,7 +8,7 @@ https://aws.amazon.com/ko/premiumsupport/knowledge-center/ec2-linux-python3-boto
 
 ftp 깔고
 
-python3 -m venv myhome -> 가상환경 생성
+python3 -m venv myhome -> 가상환경 생성 -> pip깔고 다 깔아 시발안되면 다깔아
 
 pip gunicorn 깔고
 

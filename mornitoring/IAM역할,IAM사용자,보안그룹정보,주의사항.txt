@@ -1,0 +1,21 @@
+@ IAM사용자
+AWS CLI 접근을 위해 엑세스키,. 비밀키 기반 사용자 생성
+-> CloudWatchFullAccess정책 연결
+-> Grafana에서 CloudWatch랑 연동하려면 해당 정책이 적용된 계정 엑세스,비밀키가 필요함
+
+@IAM 역할
+EC2ReadOnlyAcccess
+-> Prometheus가 EC2의 Node_Exporter로부터 Metrics를 가져오려면 해당 정책필요
+-> EC2 역할에 해당 정책추가해서 모니터링서버 인스턴스에 적용
+
+@보안그룹
+모니터링 서버 : 3000(Grafana), 9090(Prometheus)
+EC2 : 9100(Node_Exporter)
+
+@주의사항
+Node_Exporter가 설치된 WEB, WAS이미지로
+시작 템플릿 구성 및 오토스케일링 그룹 생성시
+WEB은 Tag에 Name = WEB~ / (WEB으로시작 전부 대문자) / EX : WEB-Instance
+WAS은 Tag에 Name = WAS~ / (WAS로시작 전부 대문자) / EX : WAS-Instance
+로 Tag에 Name(첫 글자 대문자 필수)값을 다음과 같이 작성해야
+Prometheus가 정상적으로 Service Discovery를 수행
