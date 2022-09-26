@@ -1,0 +1,23 @@
+$> /root/prometheus_bakcup_s3.sh
+#!/bin/bash
+
+file_name="$(date +%Y-%m-%d).tar.gz"
+# 파일 이름 변수
+
+cd /root/prometheus
+# Prometheus 폴더로 이동
+tar -zcvf $file_name data
+# data파일 압축
+mv $file_name /root
+cd /root
+# root 경로로 mv
+aws s3 cp $file_name s3://my-chachacha-test-bucket/Prometheus_data/
+# S3에 저장
+# S3 URI는 이후 수정 가능
+# EC2 IAM 역할에 S3 Full Access 및 S3 엑세스 정책 허용 필요
+rm -rf $file_name
+# 기존 파일 삭제
+
+$> /etc/crontab
+* * * * 0 root /root/prometheus_backup_s3.sh 2> /var/log/s3_backup_error.log
+# 매주 일요일마다 S3에 백업

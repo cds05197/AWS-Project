@@ -1,0 +1,16 @@
+인스턴스 : 
+/var/log/message
+/var/log/secure
+
+그라파나 : 
+/var/log/grafana/grafana.log
+
+웹서버 : 
+/var/log/nginx/access.log
+/var/log/nginx/error.log
+
+Loki 대시보드 : 12019
+{job="system_message_logs"}
+{job="MessageLog"}
+{job="SecureLog"}
+{job="system_secure_logs"}

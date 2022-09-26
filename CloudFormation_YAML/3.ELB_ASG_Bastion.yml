@@ -1,0 +1,306 @@
+Parameters:
+  #키교환
+  WebKey:
+    Description: Web KeyPair
+    Type: AWS::EC2::KeyPair::KeyName
+  WASKey:
+    Description: WAS KeyPair
+    Type: AWS::EC2::KeyPair::KeyName
+  BastionKey:
+    Description: WAS KeyPair
+    Type: AWS::EC2::KeyPair::KeyName
+
+  #VPC
+  SeoulVPC:
+    Description: VPC
+    Type: AWS::EC2::VPC::Id
+
+  #Security Group
+  WebSG:
+    Description: SG for Web Server
+    Type: AWS::EC2::SecurityGroup::Id
+  WASSG:
+    Description: SG for WAS
+    Type: AWS::EC2::SecurityGroup::Id 
+  ExELBSG:
+    Description: SG for external elb
+    Type: AWS::EC2::SecurityGroup::Id
+  InELBSG:
+    Description: SG for internal elb
+    Type: AWS::EC2::SecurityGroup::Id
+  BastionSG:
+    Description: SG for bastion host
+    Type: AWS::EC2::SecurityGroup::Id
+
+  #Subnet
+  SeoulAPublic:
+    Description: seoul a public subnet
+    Type: AWS::EC2::Subnet::Id
+  SeoulCPublic:
+    Description: seoul c public subnet
+    Type: AWS::EC2::Subnet::Id
+  SeoulAPrivateWEB:
+    Description: seoul a private subnet for web
+    Type: AWS::EC2::Subnet::Id
+  SeoulAPrivateWAS:
+    Description: seoul a private subnet for was
+    Type: AWS::EC2::Subnet::Id
+  SeoulCPrivateWEB:
+    Description: seoul c private subnet for web
+    Type: AWS::EC2::Subnet::Id
+  SeoulCPrivateWAS:
+    Description: seoul c private subnet for was
+    Type: AWS::EC2::Subnet::Id
+
+
+
+Resources:
+  #EC2 SSM role 생성
+  EC2SSMRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/AmazonSSMAutomationApproverAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+        - arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess
+      Tags:
+        - Key: name
+          Value: EC2-SSM-Role    
+
+  
+  EC2SSMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      Path: /
+      Roles: [!Ref EC2SSMRole]
+
+
+  #오토스케일링 템플릿 생성     
+  WebLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    DependsOn: InELB
+    Properties:
+      ImageId: ami-00502c8df8f586536
+      InstanceType: t2.micro
+      KeyName: !Ref WebKey
+      IamInstanceProfile: !Ref EC2SSMInstanceProfile
+      LaunchConfigurationName: Web-LC
+      SecurityGroups:
+        - !Ref WebSG
+      UserData:
+        Fn::Base64: 
+          !Sub |
+            #!/bin/bash
+            aws configure set region ap-northeast-2
+            InELB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[*].[DNSName]' --output text | grep InELB)
+            sudo sed -i "/proxy_pass/d" /etc/nginx/conf.d/default.conf
+            sudo sed -i '7 i\\t\tproxy_pass http:\/\/'"$InELB"';' /etc/nginx/conf.d/default.conf
+            sudo systemctl restart nginx
+           
+  WASLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: ami-0a3dfd4e4f57bb28a
+      InstanceType: t2.micro
+      KeyName: !Ref WASKey
+      IamInstanceProfile: !Ref EC2SSMInstanceProfile
+      LaunchConfigurationName: WAS-LC
+      SecurityGroups:
+        - !Ref WASSG
+      UserData:
+        Fn::Base64: 
+          !Sub |
+            #!/bin/bash
+              sudo sed -i "s/DEBUG = .*/DEBUG = False/" /my-django/config/settings.py
+              sudo sed -i "s/is_Production = .*/is_Production = False/" /my-django/config/settings.py
+  
+  #외부 ELB 생성
+  ExELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ExELBSG
+      Subnets:
+        - !Ref SeoulAPublic
+        - !Ref SeoulCPublic
+      Tags:
+        - Key: Name
+          Value: External-ELB
+  
+  #외부 ELB 타겟그룹
+  ExELBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref SeoulVPC
+      TargetType: instance
+      Port: 80
+      Protocol: HTTP
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+      Tags:
+        - Key: Name
+          Value: External-ELB-TG
+
+  ExELBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ExELBTargetGroup 
+      LoadBalancerArn: !Ref ExELB
+      Port: 80
+      Protocol: HTTP
+
+  #Web autoscaling group
+  WebASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn:
+      - ExELBTargetGroup
+      - ExELB
+    Properties:
+      VPCZoneIdentifier:
+        - !Ref SeoulAPrivateWEB
+        - !Ref SeoulCPrivateWEB
+      Cooldown: 10
+      LaunchConfigurationName: !Ref WebLC
+      MaxSize: 6
+      MinSize: 2
+      DesiredCapacity: 2
+      TargetGroupARNs:
+        - !Ref ExELBTargetGroup
+      Tags:
+        - Key: Name
+          Value: Web-ASG
+          PropagateAtLaunch: true
+
+  WebASGPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref WebASG
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 5
+  
+  #내부 ELB
+  InELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internal
+      SecurityGroups:
+        - !Ref InELBSG
+      Subnets:
+        - !Ref SeoulAPrivateWEB
+        - !Ref SeoulCPrivateWEB
+      Tags:
+        - Key: Name
+          Value: Internal-ELB
+  
+  #내부 ELB 타겟그룹
+  InELBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref SeoulVPC
+      TargetType: instance
+      Port: 80
+      Protocol: HTTP
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      TargetGroupAttributes:
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+      Tags:
+        - Key: Name
+          Value: Internal-ELB-TG
+
+  InELBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref InELBTargetGroup
+      LoadBalancerArn: !Ref InELB
+      Port: 80
+      Protocol: HTTP
+
+  #WAS autoscaling group
+  WASASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn:
+      - InELBTargetGroup
+      - InELB
+    Properties:
+      VPCZoneIdentifier:
+        - !Ref SeoulAPrivateWAS
+        - !Ref SeoulCPrivateWAS
+      Cooldown: 10
+      LaunchConfigurationName: !Ref WASLC
+      MaxSize: 6
+      MinSize: 2
+      DesiredCapacity: 2
+      TargetGroupARNs:
+        - !Ref InELBTargetGroup
+      Tags:
+        - Key: Name
+          Value: WAS-ASG
+          PropagateAtLaunch: true
+
+  WASASGPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref WASASG
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 5
+
+  #Bastion Host 생성
+  SeoulBastionEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-01d87646ef267ccd7
+      InstanceType: t2.micro
+      KeyName: !Ref BastionKey
+      IamInstanceProfile: !Ref EC2SSMInstanceProfile
+      NetworkInterfaces: 
+      - AssociatePublicIpAddress: "true"
+        DeviceIndex: "0"
+        GroupSet: 
+          - Ref: BastionSG
+        SubnetId: !Ref SeoulCPublic
+      Tags:
+        - Key: Name
+          Value: Seoul-BastionHost
+
+  

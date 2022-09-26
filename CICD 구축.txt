@@ -33,6 +33,7 @@ sudo systemctl restart kgcha
 < TimeZone 서울로 변경 >
 sudo rm /etc/localtime
 sudo ln -s /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+
 < CodeDeploy Agent 설치 >
 yum -y install ruby
 -> codedeploy 설치 시 ruby언어 사용해서 설치해야함

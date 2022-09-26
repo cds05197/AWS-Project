@@ -24,7 +24,7 @@ https://bokee.tistory.com/2 -> 서비스 디스커버리 1
 https://medium.com/myrealtrip-product/prometheus%EB%A5%BC-%ED%86%B5%ED%95%9C-%EC%84%9C%EB%B2%84-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81-deab448b769d -> 서비스 디스커버리 2
 
 WAS에도 node exporter 깔아야 함
-아래 내용이 서비스 디스커버리 야믈
+아래 내용이 서비스 디스커버리 Yaml
 ------------------------------------------------------------------------------------------------------
 # my global config
 global:
