@@ -1,0 +1,9 @@
+[Unit]
+Description=Promtail
+Documentation=https://github.com/grafana/loki
+
+[Service]
+ExecStart=/usr/local/bin/promtail -config.file /root/promtail/config.yaml
+
+[Install]
+WantedBy=multi-user.target

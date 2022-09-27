@@ -9,8 +9,8 @@ EC2ReadOnlyAcccess
 -> EC2 역할에 해당 정책추가해서 모니터링서버 인스턴스에 적용
 
 @보안그룹
-모니터링 서버 : 3000(Grafana), 9090(Prometheus)
-EC2 : 9100(Node_Exporter)
+모니터링 서버 : 3000(Grafana), 9090(Prometheus), 3100(Loki)
+EC2 : 9100(Node_Exporter), 9080(Promtail)
 
 @주의사항
 Node_Exporter가 설치된 WEB, WAS이미지로

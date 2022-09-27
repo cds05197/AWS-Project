@@ -1,0 +1,32 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://43.200.207.24:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: WEB_secure_log
+    static_configs:
+    - targets:
+        - grafana
+      labels:
+        job: WEB_secure_log
+        __path__: /var/log/secure
+  - job_name: nginx_error
+    static_configs:
+    - targets:
+        - grafana
+      labels:
+        job: nginx_error_log
+        __path__: /var/log/nginx/error.log
+  - job_name: nginx_access
+    static_configs:
+    - targets:
+        - grafana
+      labels:
+        job: nginx_access_log
+        __path__: /var/log/nginx/json_access.log

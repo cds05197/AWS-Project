@@ -1,0 +1,9 @@
+[Unit]
+Description=Like Prometheus, but for logs.
+Documentation=https://github.com/grafana/loki
+
+[Service]
+ExecStart=/usr/local/bin/loki -config.file /root/loki/config.yml
+
+[Install]
+WantedBy=multi-user.target
