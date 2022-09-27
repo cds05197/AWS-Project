@@ -10,7 +10,67 @@
 /var/log/nginx/error.log
 
 Loki 대시보드 : 12019
-{job="system_message_logs"}
-{job="MessageLog"}
-{job="SecureLog"}
-{job="system_secure_logs"}
+WAS 로그 파일
+/var/log/secure
+/var/log/messages
+
+WEB 로그 파일
+/var/log/secure
+/var/log/nginx/json_access.log
+/var/log/nginx/error.log
+
+https://grafana.com/grafana/dashboards/12559-grafana-loki-dashboard-for-nginx-service-mesh/ -> Nginx 대시 보드 링크
+
+https://ksr930.tistory.com/117 -> Loki / Promtail 설치
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop
+-> cloudwatch agent 정지
+
+https://pureani.tistory.com/5442
+-> nginx log json parsing + detail + loki_grafana Dashboard 연동
+
+# /usr/share/nginx/modules
+-> 모듈 복사 위치
+
+* 로키 남은 할일
+- nginx 대시 보드 구형 -> 실패
+- Django 로그 관리 -> 실패
+- Cloudwatchlogs와 통합 -> 도즈언
+
+https://grafana.com/docs/loki/latest/logql/log_queries/
+-> 로키 쿼리 문법
+
+-> https://grafana.com/docs/loki/latest/clients/lambda-promtail/
+-> Cloudwatch logs랑 통합
+
+{job="WEB_secure_log"} |= "172-31-16-47" -> secure로그에서 특정 아이피 기록 조회
+
+{job="nginx_access_log"} |= "status" |= "400" -> 400번 로그 조회
+{job="nginx_access_log"} |= "status" != "200" -> 성공 아닌 기록 조회
+
+{job="nginx_access_log"} |= "geoip_country_code" |= "US"
+-> 사용자 지역 미국인 기록 조회
+{job="nginx_access_log"} |= "geoip_country_code" |= "KR"
+-> 사용자 지역 한국인 기록 조회
+
+count_over_time({job="nginx_access_log"} |= "geoip_country_code" |= "KR" [1h])
+-> 한국인 기록 카운팅 + 그래프로 시각화
+
+count_over_time( {job="nginx_access_log"} |= "status" |= "400" [1h])
+-> 400번 에러 카운팅 + 그래프로 시각화
+
+{job="nginx_access_log"} |= "http_host" |= "ec2-13-125-233-193.ap-northeast-2.compute.amazonaws.com" 
+-> 특정 인스턴스 기록 조회
+
+
+{job="nginx_access_log"} |= "http_host" |= "ec2-3-35-131-159.ap-northeast-2.compute.amazonaws.com" |= "status" != "200"
+-> 특정 인스턴스에 성공 아닌 기록 조회
+
+count_over_time( {job="nginx_access_log"} |= "http_host" |= "ec2-3-35-131-159.ap-northeast-2.compute.amazonaws.com" |= "status" |= "200" [3h])
+-> 특정 인스턴스에 성공 아닌 기록 카운트 및 그래프로 시각화
+
+{job="nginx_error_log"} |= "error" -> 에러 로그에서 에러 검색
+{job="nginx_error_log"} |~ "06:0*" -> 에러 로그에서 특정 시간대 검색
+{job="nginx_error_log"} |= "No route" -> 목적지 경로 에러 문제 검색
+
+count_over_time( {job="nginx_error_log"} |= "No route" [10m])
