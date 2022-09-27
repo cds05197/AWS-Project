@@ -72,5 +72,7 @@ count_over_time( {job="nginx_access_log"} |= "http_host" |= "ec2-3-35-131-159.ap
 {job="nginx_error_log"} |= "error" -> 에러 로그에서 에러 검색
 {job="nginx_error_log"} |~ "06:0*" -> 에러 로그에서 특정 시간대 검색
 {job="nginx_error_log"} |= "No route" -> 목적지 경로 에러 문제 검색
-
-count_over_time( {job="nginx_error_log"} |= "No route" [10m])
+{job="nginx_access_log"} |= "http_x_forwarded_for" -> x_forwarded_for 탐색
+{job="WEB_secure_log"} |= "USER=root"
+{job="WEB_secure_log"} |= "COMMAND=/bin/systemctl" 
+{job="WEB_secure_log"} |= "COMMAND=/bin/su"
