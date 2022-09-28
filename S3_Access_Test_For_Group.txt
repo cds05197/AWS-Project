@@ -1,0 +1,44 @@
+456468200649
+
+* 하나의 버킷에서 Group단위로 권한을 폴더별로 부여
+Test1 버킷에 Dev Prod 폴더가 있는데
+Dev 그룹에 있는 사용자는 Dev에서만 활용이 가능하다.
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowDevGroupToSeeBucketListInTheConsole",
+            "Action": [
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketLocation",
+                "s3:PutObject",
+                "s3:getBucketVersioning",
+                "s3:DeleteObject"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        },
+        {
+            "Sid": "AllowDevGroupRootAndHomeListingOfCompanyBucket",
+            "Action": [
+                "s3:*"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "arn:aws:s3:::my-chachacha-test-bucket"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "s3:prefix": [
+                        "",
+                        "Dev/"
+                    ],
+                    "s3:delimiter": [
+                        "/"
+                    ]
+                }
+            }
+        }
+    ]
+}
